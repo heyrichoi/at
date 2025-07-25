@@ -1,0 +1,1816 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>은재와의 이야기</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom CSS animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        .animate-fade-in-text {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translate(-50%, 0%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
+        .animate-bounce-custom {
+            animation: float 3s ease-in-out infinite;
+        }
+        /* Hide elements by default, show with JS */
+        #nameInputScreen, #gameScreen, #endingScreen, #specialImageScreen {
+            display: none;
+        }
+    </style>
+</head>
+<body class="fixed inset-0 bg-gradient-to-br from-[#ffebee] to-[#f8bbd0] flex items-center justify-center p-4">
+
+    <!-- Main Logo Screen -->
+    <div id="mainScreen" class="fixed inset-0 bg-cover bg-center bg-no-repeat flex items-end justify-center pb-20 z-30"
+         style="background-image: url('https://imgur.com/dahh1jr.jpg'); background-size: cover; background-position: center;">
+        <div class="text-center">
+            <div class="cursor-pointer transition-transform hover:scale-105 animate-bounce-custom" id="mainScreenClickArea">
+                <img src="https://imgur.com/pbrlurz.jpg" alt="Game Logo" class="w-64 h-auto mx-auto drop-shadow-2xl rounded-xl"
+                     onerror="this.onerror=null;this.src='https://placehold.co/256x256/cccccc/333333?text=Logo+Error';">
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Game Container (Name Input, Game Play, Ending, Special Image all within this responsive container) -->
+    <div id="gameContainer" class="relative w-full max-w-md h-full max-h-[800px] bg-white/70 backdrop-blur-lg rounded-xl shadow-2xl flex flex-col overflow-hidden transition-all duration-1000 ease-in-out">
+        
+        <!-- Background and Character Images (Dynamic based on game state) -->
+        <div id="gameBackground" class="absolute inset-0 bg-cover bg-center bg-no-repeat"></div>
+        <div class="absolute inset-0 bg-black/10"></div> <!-- Background overlay -->
+        <div class="absolute inset-0 flex items-center justify-center">
+            <img id="gameCharacter" src="" alt="은재" class="h-full object-contain"
+                 onerror="this.onerror=null;this.src='https://placehold.co/1080x1920/cccccc/333333?text=Character+Load+Error';">
+        </div>
+
+        <!-- Name Input Screen -->
+        <div id="nameInputScreen" class="absolute inset-0 flex items-center justify-center p-4 z-30 bg-cover bg-center bg-no-repeat"
+             style="background-image: url('https://imgur.com/dahh1jr.jpg');">
+            <div class="bg-white/80 backdrop-blur-md rounded-xl p-8 shadow-xl max-w-sm w-full space-y-6 text-center">
+                <h1 class="text-2xl font-bold text-pink-600">은재와의 이야기</h1>
+                <div class="space-y-4">
+                    <p class="text-gray-600">당신의 이름을 알려주세요!</p>
+                    <input type="text" id="playerNameInput" placeholder="이름을 입력해주세요"
+                           class="w-full p-3 border-2 border-pink-200 rounded-lg focus:border-pink-400 outline-none text-center bg-white/70 rounded-md">
+                    <button id="startGameButton" class="w-full bg-pink-500/90 text-white py-3 rounded-lg font-bold hover:bg-pink-600 disabled:bg-gray-300 transition-all duration-200 rounded-md">
+                        게임 시작!
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Game Play UI -->
+        <div id="gameScreen" class="w-full h-full flex flex-col">
+            <!-- Top UI - Affection Gauges -->
+            <div class="relative z-20 p-3">
+                <div class="space-y-2">
+                    <!-- Day Affection -->
+                    <div class="bg-white/70 backdrop-blur-sm rounded-full px-4 py-2 shadow-lg rounded-md">
+                        <div class="flex items-center justify-between mb-1">
+                            <div class="flex items-center space-x-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sun text-yellow-500"><circle cx="12" cy="12" r="8"/><line x1="12" x2="12" y1="2" y2="4"/><line x1="12" x2="12" y1="20" y2="22"/><line x1="2" x2="4" y1="12" y2="12"/><line x1="20" x2="22" y1="12" y2="12"/><line x1="4.22" x2="5.64" y1="4.22" y2="5.64"/><line x1="18.36" x2="19.78" y1="18.36" y2="19.78"/><line x1="4.22" x2="5.64" y1="19.78" y2="18.36"/><line x1="18.36" x2="19.78" y1="5.64" y2="4.22"/></svg>
+                                <span class="text-xs font-bold text-gray-600">낮 호감도</span>
+                            </div>
+                            <span id="dayAffectionText" class="text-xs font-bold text-yellow-600">0/100</span>
+                        </div>
+                        <div class="bg-gray-200 rounded-full h-2 overflow-hidden">
+                            <div id="dayAffectionBar" class="bg-gradient-to-r from-yellow-400 to-pink-500 h-full rounded-full transition-all duration-700 ease-out" style="width: 0%;"></div>
+                        </div>
+                        <div class="text-center mt-1">
+                            <span id="dayAffectionLevel" class="text-xs text-gray-500">낯선 사이</span>
+                        </div>
+                    </div>
+
+                    <!-- Night Affection -->
+                    <div class="bg-white/70 backdrop-blur-sm rounded-full px-4 py-2 shadow-lg rounded-md">
+                        <div class="flex items-center justify-between mb-1">
+                            <div class="flex items-center space-x-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-moon text-purple-500"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                                <span class="text-xs font-bold text-gray-600">밤 호감도</span>
+                            </div>
+                            <span id="nightAffectionText" class="text-xs font-bold text-purple-600">0/100</span>
+                        </div>
+                        <div class="bg-gray-200 rounded-full h-2 overflow-hidden">
+                            <div id="nightAffectionBar" class="bg-gradient-to-r from-purple-400 to-indigo-500 h-full rounded-full transition-all duration-700 ease-out" style="width: 0%;"></div>
+                        </div>
+                        <div class="text-center mt-1">
+                            <span id="nightAffectionLevel" class="text-xs text-gray-500">낯선 사이</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Affection Change Pop-up -->
+            <div id="affectionChangePopup" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30
+                 bg-white/70 backdrop-blur-md rounded-full px-6 py-3 shadow-xl flex items-center space-x-2
+                 animate-fade-in-up hidden border-2">
+                <span id="affectionChangeIcon"></span>
+                <span id="affectionChangeAmount" class="font-bold text-lg"></span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-heart"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+            </div>
+
+            <!-- Bottom Dialogue Box -->
+            <div id="dialogueBox" class="relative z-20 mt-auto cursor-pointer" style="cursor: pointer;">
+                <div class="bg-white/70 backdrop-blur-sm border-t border-gray-200 p-4 space-y-4 max-h-[60vh] overflow-y-auto">
+                    <!-- Narration Content -->
+                    <div id="narrationContent" class="space-y-4 animate-fade-in">
+                        <div class="bg-white/90 backdrop-blur-sm rounded-lg p-4 border-l-4 border-gray-400 rounded-md">
+                            <p id="narrationText" class="text-gray-700 text-sm leading-relaxed font-medium"></p>
+                        </div>
+                    </div>
+
+                    <!-- Dialogue Content -->
+                    <div id="dialogueContent" class="space-y-4 animate-fade-in hidden">
+                        <div class="bg-white/90 backdrop-blur-sm rounded-lg p-4 border-l-4 border-gray-200 rounded-md">
+                            <div class="flex items-start space-x-3">
+                                <div class="flex-1">
+                                    <div id="girlNameDisplay" class="text-sm font-bold mb-2 flex items-center space-x-2"></div>
+                                    <p id="dialogueText" class="text-sm leading-relaxed animate-fade-in-text"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Choices Content -->
+                    <div id="choicesContent" class="space-y-3 animate-fade-in hidden">
+                        <div class="text-sm font-bold text-gray-700 mb-2">선택해주세요:</div>
+                        <!-- Choices will be dynamically inserted here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ending Screen -->
+        <div id="endingScreen" class="absolute inset-0 bg-cover bg-center bg-no-repeat hidden">
+            <div class="absolute inset-0 bg-black/30"></div>
+            <div class="relative z-10 flex items-center justify-center min-h-full p-4">
+                <div class="bg-white/70 backdrop-blur-sm rounded-xl p-8 shadow-xl max-w-md w-full space-y-6 animate-fade-in rounded-md">
+                    <div class="text-center space-y-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star text-yellow-500 mx-auto"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        <h1 id="endingTitle" class="text-2xl font-bold text-purple-600"></h1>
+                        
+                        <div class="space-y-2 text-left">
+                            <p id="endingContentText" class="text-sm text-gray-700 leading-relaxed animate-fade-in-text"></p>
+                        </div>
+
+                        <div class="space-y-4">
+                            <button id="endingNextButton" class="w-full bg-purple-500/90 text-white py-3 rounded-lg font-bold hover:bg-purple-600 flex items-center justify-center space-x-2 transition-all duration-300 rounded-md">
+                                <span>다음</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                            </button>
+                            <div id="finalResults" class="space-y-3 hidden">
+                                <div class="text-center py-4 bg-gray-50/70 rounded-lg rounded-md">
+                                    <p class="text-sm text-gray-600 mb-2">최종 결과</p>
+                                    <div class="space-y-1">
+                                        <p class="text-sm">
+                                            낮 관계: <span id="finalDayAffection" class="font-bold text-yellow-600"></span>
+                                        </p>
+                                        <p class="text-sm">
+                                            밤 관계: <span id="finalNightAffection" class="font-bold text-purple-600"></span>
+                                        </p>
+                                    </div>
+                                </div>
+                                <button id="restartGameButton" class="w-full bg-green-500/90 text-white py-3 rounded-lg font-bold hover:bg-green-600 transition-all duration-200 rounded-md">
+                                    다시 시작하기
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Special Image Fullscreen Display -->
+        <div id="specialImageScreen" class="absolute inset-0 bg-black/70 z-50 flex items-center justify-center hidden">
+            <div class="relative w-full h-full">
+                <img id="specialImageDisplay" src="" alt="Special Scene" class="w-full h-full object-contain"
+                     onerror="this.onerror=null;this.src='https://placehold.co/1920x1080/cccccc/333333?text=Image+Load+Error';">
+                <button id="closeSpecialImageButton" class="absolute top-4 right-4 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-all rounded-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+                <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2">
+                    <button id="continueSpecialImageButton" class="bg-white/90 text-gray-800 px-6 py-3 rounded-lg font-bold hover:bg-white transition-all rounded-md">
+                        계속하기
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div> <!-- End of gameContainer -->
+
+    <script>
+        // Game State
+        let gameState = {
+            currentEpisode: 0,
+            dayAffection: 0,
+            nightAffection: 0,
+            playerName: '',
+            girlName: '은재',
+            gameStarted: false,
+            showNameInput: false,
+            showMainScreen: true,
+            currentStep: 'narration',
+            currentDialogueIndex: 0,
+            selectedChoice: null,
+            gameCompleted: false,
+            endingType: null,
+            showSpecialImage: false,
+            specialImageUrl: '',
+            showAffectionChange: false,
+            affectionChangeAmount: 0,
+            affectionChangeType: 'day',
+        };
+
+        // Audio Elements
+        const bgm = new Audio('https://github.com/heyrichoi/at/raw/refs/heads/main/%5BFREE%20BGM%5D%20%EB%B3%B8%EA%B2%A9%20%EB%8B%AC%EC%BD%A4%20$weet%20%20%EC%8A%A4%EC%BF%A8%20%EC%97%B0%EC%95%A0%20%EC%8B%9C%EB%AE%AC%EB%A0%88%EC%9D%B4%EC%85%98%EC%97%90%20%EB%82%98%EC%98%AC%20%EA%B2%83%20%EA%B0%99%EC%9D%80%20BGM%20__%E3%83%BB%EF%BE%9F_%20%EC%84%A4%EB%A0%88%EB%8A%94%20%EA%B0%90%EC%84%B1%EC%97%90%20%EB%B8%8C%EA%B8%88%20_%20%EB%91%90%EA%B7%BC%EB%91%90%EA%B7%BC%20%EB%A9%94%EB%AA%A8%EB%A6%AC%EC%96%BC%20_%20%EC%84%A4%EB%A0%88%EB%8A%94%20BGM.mp3');
+        const touchSfx = new Audio('https://github.com/heyrichoi/at/raw/refs/heads/main/Storytelling%20Cartoon%20PopVocal%2009.mp3');
+        const affectionSfx = new Audio('https://github.com/heyrichoi/at/raw/refs/heads/main/magic%203.mp3');
+        const endingSfx = new Audio('https://github.com/heyrichoi/at/raw/refs/heads/main/%EC%86%8C%EB%AC%B8%EC%9D%98%20%EA%B7%B8%20%EC%95%A0%20_%20Covered%20by%20Mulia%20%E3%80%90%E6%AD%8C%E3%81%A3%E3%81%A6%E3%81%BF%E3%81%9F%E3%80%91.mp3');
+
+        // Audio setup
+        bgm.loop = true;
+        bgm.volume = 0.5;
+        touchSfx.volume = 0.7;
+        affectionSfx.volume = 0.7;
+        endingSfx.volume = 0.8;
+
+        // Episode Images (Moved to global scope)
+        const episodeImages = {
+            1: 'https://imgur.com/j6gPal9.jpg',
+            2: 'https://imgur.com/PSrcxYa.jpg',
+            3: 'https://imgur.com/q0VtIll.jpg',
+            4: 'https://imgur.com/hdyNQNW.jpg',
+            5: 'https://imgur.com/AmV0mUa.jpg',
+            7: 'https://imgur.com/blAtS4D.jpg',
+            8: 'https://imgur.com/Urkoxru.jpg',
+            10: 'https://imgur.com/ZI5FiYn.jpg',
+            11: 'https://imgur.com/pkv0pI1.jpg',
+            12: 'https://imgur.com/5y6ZJwT.jpg',
+            13: 'https://imgur.com/GLpLozP.jpg',
+            14: 'https://imgur.com/t7mTGpO.jpg',
+            15: 'https://imgur.com/WvdiznE.jpg',
+            16: 'https://imgur.com/FOxA0jv.jpg',
+            17: 'https://imgur.com/havdTOP.jpg',
+            18: 'https://imgur.com/rMVU5xL.jpg',
+            19: 'https://imgur.com/xMvejUH.jpg'
+        };
+
+        // Ending Images (Moved to global scope)
+        const endingImages = {
+            'true': 'https://imgur.com/OncdVkv.jpg',
+            'day': 'https://imgur.com/vbxQbIl.jpg',
+            'night': 'https://imgur.com/cQ4NTFt.jpg',
+            'balance': 'https://imgur.com/nTRqrKp.jpg',
+            'friend': 'https://imgur.com/fZenF3A.jpg',
+            'bad': 'https://imgur.com/V66FalX.jpg'
+        };
+
+        // Background and Character Image URLs (Moved to global scope)
+        const dayBgUrl = 'https://imgur.com/lYqbQYB.jpg'; // 낮 배경 이미지
+        const nightBgUrl = 'https://imgur.com/Cd6fdO0.jpg'; // 밤 배경 이미지
+        const dayCharacterUrl = 'https://imgur.com/taxRPpa.jpg'; // 낮 캐릭터 이미지
+        const nightCharacterUrl = 'https://imgur.com/zx3fyfR.jpg'; // 밤 캐릭터 이미지
+
+
+        // DOM Elements
+        const mainScreen = document.getElementById('mainScreen');
+        const mainScreenClickArea = document.getElementById('mainScreenClickArea');
+        const nameInputScreen = document.getElementById('nameInputScreen');
+        const playerNameInput = document.getElementById('playerNameInput');
+        const startGameButton = document.getElementById('startGameButton');
+        const gameScreen = document.getElementById('gameScreen');
+        const gameBackground = document.getElementById('gameBackground');
+        const gameCharacter = document.getElementById('gameCharacter');
+        const dayAffectionText = document.getElementById('dayAffectionText');
+        const dayAffectionBar = document.getElementById('dayAffectionBar');
+        const dayAffectionLevel = document.getElementById('dayAffectionLevel');
+        const nightAffectionText = document.getElementById('nightAffectionText');
+        const nightAffectionBar = document.getElementById('nightAffectionBar');
+        const nightAffectionLevel = document.getElementById('nightAffectionLevel');
+        const affectionChangePopup = document.getElementById('affectionChangePopup');
+        const affectionChangeIcon = document.getElementById('affectionChangeIcon');
+        const affectionChangeAmountDisplay = document.getElementById('affectionChangeAmount');
+        const dialogueBox = document.getElementById('dialogueBox');
+        const narrationContent = document.getElementById('narrationContent');
+        const narrationText = document.getElementById('narrationText');
+        const dialogueContent = document.getElementById('dialogueContent');
+        const girlNameDisplay = document.getElementById('girlNameDisplay');
+        const dialogueText = document.getElementById('dialogueText');
+        const choicesContent = document.getElementById('choicesContent');
+        const endingScreen = document.getElementById('endingScreen');
+        const endingTitle = document.getElementById('endingTitle');
+        const endingContentText = document.getElementById('endingContentText');
+        const endingNextButton = document.getElementById('endingNextButton');
+        const finalResults = document.getElementById('finalResults');
+        const finalDayAffection = document.getElementById('finalDayAffection');
+        const finalNightAffection = document.getElementById('finalNightAffection');
+        const restartGameButton = document.getElementById('restartGameButton');
+        const specialImageScreen = document.getElementById('specialImageScreen');
+        const specialImageDisplay = document.getElementById('specialImageDisplay');
+        const closeSpecialImageButton = document.getElementById('closeSpecialImageButton');
+        const continueSpecialImageButton = document.getElementById('continueSpecialImageButton');
+
+        // Episode Data
+        const episodes = [
+            {
+                id: 0,
+                title: "떨어진 핸드폰",
+                timeOfDay: 'day',
+                narration: [
+                    "점심시간, 캠퍼스 중앙 광장에서 벤치에 앉아 샌드위치를 먹고 있었다.",
+                    "그때 분홍빛 머리의 예쁜 소녀가 친구들과 웃으며 이야기하다가 급하게 뛰어가는 모습이 보였다.",
+                    "그런데 그녀가 가방에서 핸드폰이 떨어뜨린 것 같았다.",
+                    "주워서 돌려주려고 했지만 이미 멀리 사라진 후였다.",
+                    "핸드폰을 들고 어떻게 할까 고민하던 그때, 벨소리가 울렸다."
+                ],
+                dialogues: [
+                    "여보세요?",
+                    "어... 낯선 목소리네요?",
+                    "혹시 제 핸드폰을 주우신 건가요?",
+                    "아, 정말 다행이에요!",
+                    "수업 끝나고 찾으러 다니느라 정말 고생했을 뻔했어요.",
+                    "정말정말 감사해요!",
+                    "어디서 주우셨어요?",
+                    "혹시 캠퍼스 중앙 광장 근처였나요?",
+                    "아, 맞다! 제가 그쪽에서 친구들이랑 있었거든요!"
+                ],
+                choices: [
+                    { text: "네, 벤치 근처에서 주웠어요. 언제든 찾아가세요", affection: +5 },
+                    { text: "분홍 머리 예쁘신 분 꺼 맞나요? 웃으면서 뛰어가시던데", affection: +3 },
+                    { text: "보상이라도 줄 생각 있나요? 시간 뺏긴 건데", affection: -3 }
+                ],
+                reactions: [
+                    [
+                        "와, 정말 친절하시네요!",
+                        "그럼 제가 지금 바로 갈게요!",
+                        "학생회관 1층 카페는 아시나요?",
+                        "거기서 만나요!",
+                        "분홍색 가디건 입고 있을게요!",
+                        "아, 그리고 정말 고마워요!"
+                    ],
+                    [
+                        "어머, 분홍 머리라니...",
+                        "부끄러워요! 헤헤...",
+                        "맞아요, 제가 친구들이랑 웃다가 급하게 뛰어갔거든요!",
+                        "수업 늦을까봐서요!",
+                        "그래도 이렇게 찾아주셔서 정말 감사해요!"
+                    ],
+                    [
+                        "어... 보상이라고요?",
+                        "그런 건 생각 안 했는데...",
+                        "죄송해요. 그냥 고마움의 표시로 커피라도...",
+                        "아니면 괜찮으시면 그냥 가져가세요.",
+                        "시간 뺏어서 죄송해요..."
+                    ]
+                ]
+            },
+            {
+                id: 1,
+                title: "첫 만남",
+                timeOfDay: 'day',
+                showImageTiming: 'dialogue',
+                showImageIndex: 3,
+                narration: [
+                    "학생회관 1층 카페에 도착했다.",
+                    "약속 시간보다 조금 일찍 와서 자리를 잡고 기다리고 있었는데, 곧 분홍색 가디건을 입은 그녀가 카페 입구에서 두리번거리며 찾고 있는 모습이 보였다.",
+                    "생각보다 더 작고 귀여운 느낌이었다.",
+                    "손을 흔들어 신호를 보내자 그녀가 환하게 웃으며 다가왔다."
+                ],
+                dialogues: [
+                    "아! 저예요 저!",
+                    "진짜 찾아주셔서 너무너무 감사해요!",
+                    "이 핸드폰 없으면 정말 큰일날 뻔했거든요!",
+                    "부모님 연락도 못 받고, 친구들도 못 만나고...",
+                    "상상만 해도 끔찍해요!",
+                    "정말 어떻게 보답을 해드려야 할지 모르겠어요.",
+                    "밥이라도 사드릴게요! 아니면 커피라도!",
+                    "뭐든지 말씀하세요!",
+                    "아, 맞다! 저는 심리학과 2학년 은재라고 해요!"
+                ],
+                choices: [
+                    { text: "괜찮아요, 당연한 일이었어요. 이름은 " + "플레이어" + "입니다", affection: +4 },
+                    { text: "그럼 커피 한 잔만... 은재씨가 추천하는 걸로", affection: +6 },
+                    { text: "핸드폰 찾았으니 됐네요. 전 급해서 가봐야 해요", affection: -4 }
+                ],
+                reactions: [
+                    [
+                        "에이~ 그래도 안 되죠!",
+                        "플레이어씨! 이름도 예쁘시네요!",
+                        "정말 커피라도 한 잔 하셔야 해요!",
+                        "제가 여기 단골이거든요.",
+                        "사장님이 만드시는 라떼가 정말 맛있어요!",
+                        "꼭 드셔보세요!"
+                    ],
+                    [
+                        "정말요? 좋아요!",
+                        "여기 카라멜 마키아토가 정말 맛있어요!",
+                        "달콤하고 부드러워서 제가 제일 좋아하는 거예요!",
+                        "플레이어씨는 달콤한 거 좋아하세요?",
+                        "아니면 쓴 거 좋아하시나요?"
+                    ],
+                    [
+                        "아... 그러시는군요.",
+                        "급하시면 어쩔 수 없죠...",
+                        "그럼... 안녕히 가세요.",
+                        "핸드폰 찾아주셔서 감사했어요.",
+                        "좋은 하루 되세요..."
+                    ]
+                ]
+            },
+            {
+                id: 2,
+                title: "첫 번째 커피타임",
+                timeOfDay: 'day',
+                showImageTiming: 'reaction',
+                showImageIndex: 2, // 이미지가 표시될 반응 인덱스 (0부터 시작)
+                narration: [
+                    "카페에서 은재와 마주 앉아 커피를 마시며 이야기를 나누고 있었다.",
+                    "그녀는 생각보다 말이 많고 표현이 풍부했다.",
+                    "손짓 발짓을 섞어가며 재미있게 이야기하는 모습이 보기 좋았다.",
+                    "가끔 웃을 때 보이는 작은 보조개가 인상적이었다."
+                ],
+                dialogues: [
+                    "이 카페 정말 좋죠?",
+                    "저 여기서 공부도 하고, 친구들이랑 만나기도 하고...",
+                    "거의 제2의 집 같은 곳이에요!",
+                    "플레이어씨는 평소에 어떤 곳에서 시간 보내세요?",
+                    "도서관? 아니면 PC방?",
+                    "아, 혹시 운동 좋아하세요?",
+                    "저는 운동은 정말 못해서...",
+                    "체육시간만 되면 도망가고 싶어져요!",
+                    "하하하! 그래도 요가는 좀 해봤어요.",
+                    "근데 너무 어려워서 포기했지만요!"
+                ],
+                choices: [
+                    { text: "저도 이런 조용한 카페를 좋아해요. 분위기가 좋네요", affection: +5 },
+                    { text: "은재씨 웃는 모습이 정말 예뻐요. 보조개도 귀엽고", affection: +7 },
+                    { text: "요가를 포기하다니... 끈기가 없으시네요", affection: -4 }
+                ],
+                reactions: [
+                    [
+                        "그쵸? 여기 음악도 좋고, 사람들도 시끄럽게 안 해서 좋아요!",
+                        "가끔 여기서 책 읽으면서 창밖 구경하는 게 제일 좋은 것 같아요.",
+                        "플레이어씨도 책 많이 읽으세요?",
+                        "전 로맨스 소설 엄청 좋아해요!"
+                    ],
+                    [
+                        "어머! 정말요?",
+                        "헤헤... 부끄러워요!",
+                        "보조개 있는 거 어떻게 아셨어요?",
+                        "친구들도 귀엽다고 하는데...",
+                        "플레이어씨가 말해주시니까 더 기분 좋아요!",
+                        "앞으로 더 많이 웃어야겠어요!"
+                    ],
+                    [
+                        "끈기가 없다고요?",
+                        "그... 그런 건 아닌데...",
+                        "단지 너무 어려워서...",
+                        "좀 상처받았어요.",
+                        "그렇게 말씀하실 줄 몰랐는데..."
+                    ]
+                ]
+            },
+            {
+                id: 3,
+                title: "야심한 편의점",
+                timeOfDay: 'night',
+                showImageTiming: 'dialogue',
+                showImageIndex: 5,
+                narration: [
+                    "밤 11시, 과제 때문에 늦게까지 도서관에 있다가 나오는 길이었다.",
+                    "편의점에서 야식을 사려고 들어갔는데, 놀랍게도 은재가 있었다.",
+                    "그런데 낮에 봤던 그 밝고 활발한 모습과는 완전히 달랐다.",
+                    "검은 후드를 입고, 라면을 고르면서 무언가 생각에 잠겨있는 모습이었다.",
+                    "분위기가 완전히 다른 사람 같았다."
+                ],
+                dialogues: [
+                    "어? 너야...",
+                    "이런 늦은 시간에 웬일이야?",
+                    "과제하느라 밤새는 거야?",
+                    "나도 그래.",
+                    "집에 가기 싫어서 여기저기 돌아다니다가 배고파서 왔어.",
+                    "근데 뭔가 먹을 게 없네.",
+                    "라면 말고 다른 거...",
+                    "너는 뭐 사려고 왔어?",
+                    "밤에 혼자 돌아다니는 거 좋아해?",
+                    "나는 이 시간이 제일 좋아.",
+                    "조용하고... 아무도 신경 안 쓰고."
+                ],
+                choices: [
+                    { text: "과제 때문에 늦어졌어요. 은재씨도 밤에 자주 나오세요?", affection: +4 },
+                    { text: "분위기가 낮이랑 완전 달라요. 이런 모습도 매력적이네요", affection: +6 },
+                    { text: "밤에 돌아다니는 거 위험하지 않아요? 집에 가세요", affection: -3 }
+                ],
+                reactions: [
+                    [
+                        "응, 자주 나와.",
+                        "집에 있으면 답답해서...",
+                        "부모님은 일찍 자라고 하시는데 난 밤에 더 집중이 잘 돼.",
+                        "너도 그런 타입이야?",
+                        "밤에 더 깨어있는?"
+                    ],
+                    [
+                        "달라 보여?",
+                        "그럴 수도 있지.",
+                        "낮에는... 좀 연기하는 면이 있거든.",
+                        "밤에는 진짜 내 모습인 것 같아.",
+                        "이상하다고 생각해?"
+                    ],
+                    [
+                        "위험하다고?",
+                        "나를 어린애 취급하는 거야?",
+                        "내가 알아서 할 수 있어.",
+                        "참견하지 마.",
+                        "별로 고마운 소리 아니네."
+                    ]
+                ]
+            },
+            {
+                id: 4,
+                title: "깊은 밤의 대화",
+                timeOfDay: 'night',
+                showImageTiming: 'narration',
+                narration: [
+                    "24시간 김치찌개 집에서 은재와 마주 앉았다.",
+                    "가게 안에는 우리 말고도 몇 명의 손님들이 더 있었지만, 모두 조용히 식사를 하고 있어서 오히려 편안했다.",
+                    "은재는 김치찌개를 먹으면서도 계속 무언가 생각하는 듯한 표정이었다.",
+                    "낮의 그녀와는 정말 다른 사람 같았다."
+                ],
+                dialogues: [
+                    "이런 곳에서 혼자 밥 먹는 것도 나쁘지 않아.",
+                    "사람들 시끄럽게 떠들지도 않고...",
+                    "너는 어때? 혼자 있는 거 좋아해?",
+                    "나는 가끔 혼자 있을 때가 제일 편해.",
+                    "다른 사람들 눈치 안 보고...",
+                    "진짜 내 모습으로 있을 수 있거든.",
+                    "낮에는 항상 밝게 웃어야 하고, 착한 척해야 하고...",
+                    "피곤해.",
+                    "너한테는 왜 이런 얘기하는지 모르겠지만."
+                ],
+                choices: [
+                    { text: "저도 혼자 있는 시간 좋아해요. 편안하죠", affection: +5 },
+                    { text: "진짜 모습이 어떤 건지 더 알고 싶어요", affection: +8 },
+                    { text: "너무 복잡하게 생각하지 마세요. 그냥 밝게 사세요", affection: -5 }
+                ],
+                reactions: [
+                    [
+                        "그래? 다행이야.",
+                        "대부분 사람들은 혼자 있으면 외롭다고 하던데...",
+                        "너는 이해할 것 같았어.",
+                        "이상하게 편해, 너랑 있으면."
+                    ],
+                    [
+                        "진짜 모습이라...",
+                        "글쎄, 지금 이런 게 더 진짜인 것 같아.",
+                        "가식 없이 말하고...",
+                        "너도 나한테 솔직해.",
+                        "어떻게 생각해? 낮의 나랑 지금의 나?"
+                    ],
+                    [
+                        "그냥 밝게 살라고?",
+                        "진짜 내 마음 모르는구나.",
+                        "그런 말이나 하려고 나온 거야?",
+                        "실망이야.",
+                        "집에 갈래."
+                    ]
+                ]
+            },
+            {
+                id: 5,
+                title: "비 오는 오후",
+                timeOfDay: 'day',
+                showImageTiming: 'reaction',
+                showImageIndex: 0,
+                narration: [
+                    "갑자기 비가 쏟아지기 시작했다.",
+                    "우산을 깜빡하고 나온 터라 학생회관 처마 밑에서 비를 피하고 있었는데, 멀리서 은재가 우산도 없이 비를 맞으며 뛰어오는 게 보였다.",
+                    "젖은 머리카락이 얼굴에 붙어있는 모습이 안쓰러웠다."
+                ],
+                dialogues: [
+                    "아! 플레이어씨!",
+                    "여기 계셨네요!",
+                    "저도 우산 없어서 완전히 젖었어요!",
+                    "오늘 비 온다고 했는데 왜 안 가져왔을까요?",
+                    "정말 바보 같아요!",
+                    "어떡하죠? 이러다가 감기 걸리겠어요!",
+                    "그런데 플레이어씨도 우산 없으시네요?",
+                    "우리 둘 다 여기서 비 그칠 때까지 기다려야겠어요!",
+                    "다행히 같이 있어서 덜 심심하네요!"
+                ],
+                choices: [
+                    { text: "제 옷 입으세요. 감기 걸려요", affection: +8 },
+                    { text: "편의점에서 우산 사오겠습니다", affection: +7 },
+                    { text: "우산 없이 나온 건 본인 잘못이잖아요", affection: -4 }
+                ],
+                reactions: [
+                    [
+                        "어머! 그럼 플레이어씨가 춥잖아요!",
+                        "괜찮아요!",
+                        "아, 그럼 같이 입어요!",
+                        "농담이에요!",
+                        "하지만 정말 고마워요!",
+                        "이런 마음만으로도 충분해요!"
+                    ],
+                    [
+                        "정말요? 그럼 저도 같이 갈게요!",
+                        "혼자 가시면 안 되죠!",
+                        "우산 사서 같이 써요!",
+                        "그런데 돈은 제가 낼게요!",
+                        "이미 너무 신세 많이 졌거든요!"
+                    ],
+                    [
+                        "제... 제 잘못이라고요?",
+                        "그렇긴 하지만...",
+                        "그렇게 말씀하실 줄 몰랐어요...",
+                        "기분 나빠요.",
+                        "혼자 있을게요."
+                    ]
+                ]
+            },
+            {
+                id: 6,
+                title: "축제 준비",
+                timeOfDay: 'day',
+                narration: [
+                    "대학 축제를 앞두고 학과에서 부스 준비를 하고 있었다.",
+                    "우연히 은재도 같은 시간에 준비를 하게 되었다.",
+                    "그녀는 친구들과 함께 꽃다발을 만들고 있었는데, 생각보다 손재주가 좋은 것 같았다."
+                ],
+                dialogues: [
+                    "어머! 플레이어씨도 축제 준비하시는군요!",
+                    "저희는 꽃다발 만드는 부스예요!",
+                    "생각보다 어려워서 고생하고 있어요!",
+                    "플레이어씨는 어떤 부스 준비하세요?",
+                    "혹시 시간 있으시면 저희 부스도 구경 와주세요!",
+                    "축제 때 같이 돌아다녀요!",
+                    "맛있는 것도 많이 먹고, 재밌는 것도 많이 해요!",
+                    "아, 그런데 축제 때 뭐 입을지 고민이에요...",
+                    "평소보다 예쁘게 입고 싶은데!"
+                ],
+                choices: [
+                    { text: "꽃다발 만드는 거 도와드릴까요?", affection: +7 },
+                    { text: "은재씨는 뭘 입어도 예쁠 것 같아요", affection: +8 },
+                    { text: "축제 때 같이 돌아다니면 좋겠네요!", affection: +6 }
+                ],
+                reactions: [
+                    [
+                        "정말요? 도와주시면 정말 감사하겠어요!",
+                        "사실 손이 좀 부족했거든요!",
+                        "플레이어씨 손재주는 어떠세요?",
+                        "저희가 차근차근 알려드릴게요!",
+                        "같이 만들면 더 재밌을 것 같아요!"
+                    ],
+                    [
+                        "어머! 또 그렇게 말씀하시네요!",
+                        "정말 말씀을 잘하셔서 기분이 좋아져요!",
+                        "그래도 축제는 특별한 날이니까요!",
+                        "조금 더 신경써서 입고 싶어요!",
+                        "혹시 어떤 스타일이 좋을까요?"
+                    ],
+                    [
+                        "네! 저도 그랬으면 좋겠어요!",
+                        "둘이서 축제 구경하면 정말 재밌을 것 같아요!",
+                        "먹을 것도 많고, 볼 것도 많고!",
+                        "아, 생각만 해도 벌써 기대돼요!",
+                        "약속이에요!"
+                    ]
+                ]
+            },
+            {
+                id: 7,
+                title: "축제의 밤",
+                timeOfDay: 'night',
+                showImageTiming: 'dialogue',
+                showImageIndex: 4,
+                narration: [
+                    "축제 둘째 날 밤, 약속대로 은재와 함께 축제장을 돌아다니고 있었다.",
+                    "화려한 조명과 음악, 사람들의 웃음소리로 가득한 축제장이었지만, 밤이 되자 은재의 분위기도 조금 달라진 것 같았다.",
+                    "그녀는 맥주 한 캔을 마시며 무대를 바라보고 있었다."
+                ],
+                dialogues: [
+                    "축제 분위기 좋네.",
+                    "사람들 다들 재밌어 보여.",
+                    "너도 즐겁지?",
+                    "나는 이런 시끄러운 곳보다는...",
+                    "조용한 곳이 더 좋긴 한데.",
+                    "그래도 너랑 같이 있으니까 나쁘지 않아.",
+                    "맥주 마셔봐. 괜찮아.",
+                    "어른이니까 괜찮잖아.",
+                    "축제 때만큼은 좀 자유로워져도 되지 않을까?"
+                ],
+                choices: [
+                    { text: "저도 조용한 곳이 좋아요. 어디 갈까요?", affection: +7 },
+                    { text: "술은 안 좋아요. 주스나 마셔요", affection: -3 },
+                    { text: "은재씨와 있어서 어디든 좋아요", affection: +8 }
+                ],
+                reactions: [
+                    [
+                        "그래? 다행이야.",
+                        "저기 뒤쪽에 조용한 벤치 있어.",
+                        "거기서 좀 쉬자.",
+                        "사람들 구경하면서 얘기하는 것도 좋을 것 같아."
+                    ],
+                    [
+                        "주스라고?",
+                        "뭐야, 애 취급하는 거야?",
+                        "재미없네.",
+                        "너 생각보다 딱딱하구나.",
+                        "실망했어."
+                    ],
+                    [
+                        "그런 말 잘하네.",
+                        "나도... 너랑 있으면 편해.",
+                        "낮에는 말 못했지만.",
+                        "고마워, 오늘 같이 나와줘서."
+                    ]
+                ]
+            },
+            {
+                id: 8,
+                title: "도서관에서의 우연",
+                timeOfDay: 'day',
+                showImageTiming: 'reaction',
+                showImageIndex: 2,
+                narration: [
+                    "중간고사를 앞두고 도서관에서 공부를 하고 있었다.",
+                    "3층 열람실에서 자리를 잡고 앉아있는데, 멀리서 은재가 보였다.",
+                    "그녀는 심리학 전공서적들을 잔뜩 쌓아놓고 열심히 공부하고 있었다.",
+                    "집중하는 모습이 평소와 또 다른 매력을 보여주었다."
+                ],
+                dialogues: [
+                    "어머! 플레이어씨!",
+                    "여기서 공부하고 계셨네요!",
+                    "저도 중간고사 때문에 도서관 살이 시작됐어요!",
+                    "심리학 전공이 생각보다 외울 게 너무 많아서...",
+                    "머리가 터질 것 같아요!",
+                    "플레이어씨는 시험 준비 어떠세요?",
+                    "혹시 공부 잘하시는 비법 있으세요?",
+                    "저는 집중력이 너무 부족해서...",
+                    "30분만 지나면 딴 생각하게 돼요!"
+                ],
+                choices: [
+                    { text: "저도 집중 안 될 때 많아요. 같이 공부할까요?", affection: +7 },
+                    { text: "커피 마시며 잠깐 쉬어요. 너무 무리하지 마세요", affection: +6 },
+                    { text: "심리학이 뭐 그렇게 어려워요? 그냥 외우면 되는 거 아닌가요?", affection: -4 }
+                ],
+                reactions: [
+                    [
+                        "정말요? 같이 공부하면 좋겠어요!",
+                        "서로 모르는 거 물어볼 수도 있고!",
+                        "그럼 저기 큰 테이블로 옮길까요?",
+                        "같이 있으면 더 집중할 수 있을 것 같아요!",
+                        "공부 친구 생겼다!"
+                    ],
+                    [
+                        "아, 맞다! 너무 무리했나봐요!",
+                        "커피 마시면서 쉬는 것도 좋겠어요!",
+                        "머리도 좀 식히고!",
+                        "플레이어씨도 고생 많으신데 고마워요!",
+                        "10분만 쉬었다가 다시 해요!"
+                    ],
+                    [
+                        "그냥 외우면 되는 거라고요?",
+                        "심리학을 너무 쉽게 생각하시는 것 같은데...",
+                        "사람의 마음을 다루는 건데 그렇게 간단하지 않아요.",
+                        "좀 기분 나빠요.",
+                        "제 전공을 무시하시는 건가요?"
+                    ]
+                ]
+            },
+            {
+                id: 9,
+                title: "심야 전화",
+                timeOfDay: 'night',
+                narration: [
+                    "밤 12시가 넘은 시간, 과제를 하고 있는데 은재에게서 전화가 왔다.",
+                    "목소리가 평소보다 차분하면서도 어딘가 피곤한 느낌이었다."
+                ],
+                dialogues: [
+                    "늦은 시간에 미안해.",
+                    "뭐 하고 있었어? 과제?",
+                    "나도 해야 하는데 집중이 안 돼서...",
+                    "그냥 누군가 목소리 듣고 싶었어.",
+                    "혼자 있으니까 이상한 생각들이 자꾸 들어서.",
+                    "너 괜찮으면 조금 통화할래?",
+                    "별 얘기 아니어도 좋으니까.",
+                    "그냥... 너랑 얘기하고 싶어서."
+                ],
+                choices: [
+                    { text: "물론이죠. 무슨 생각 하고 있었어요?", affection: +7 },
+                    { text: "저도 혼자 있을 때 그래요. 얼마든지 통화해요", affection: +8 },
+                    { text: "밖에 나와서 산책하며 통화할까요?", affection: +6 }
+                ],
+                reactions: [
+                    [
+                        "음... 그냥 미래에 대한 고민?",
+                        "내가 정말 하고 싶은 게 뭔지 모르겠어서.",
+                        "심리학과에 왔는데 맞는 길인지...",
+                        "너는 그런 고민 없어?"
+                    ],
+                    [
+                        "그래? 다행이야.",
+                        "나만 이상한 건 줄 알았어.",
+                        "너랑 얘기하면 마음이 편해져.",
+                        "고마워, 받아줘서."
+                    ],
+                    [
+                        "밖에 나가자고?",
+                        "괜찮을까... 늦은 시간인데.",
+                        "그래도 좋아. 답답했거든.",
+                        "학교 앞 공원에서 만날래?"
+                    ]
+                ]
+            },
+            {
+                id: 10,
+                title: "별빛 아래서",
+                timeOfDay: 'night',
+                showImageTiming: 'dialogue',
+                showImageIndex: 8,
+                narration: [
+                    "학교 근처 작은 공원에서 은재를 만났다.",
+                    "가로등이 적어서 별이 잘 보이는 곳이었다.",
+                    "그녀는 벤치에 앉아 하늘을 올려다보고 있었다.",
+                    "밤의 은재는 정말 낮과 다른 사람 같았다.",
+                    "더 깊이 있고, 진지한 느낌이었다."
+                ],
+                dialogues: [
+                    "와줘서 고마워.",
+                    "이 시간에 나오자고 하는 것도 이상했을 텐데...",
+                    "여기 별 정말 예쁘지?",
+                    "낮에는 못 보는 건들이 밤에는 보여.",
+                    "마치 나처럼...",
+                    "너는 어때?",
+                    "낮의 나랑 밤의 나 중에 어떤 게 더 진짜 같아?",
+                    "솔직히 말해줘.",
+                    "이상하다고 생각해도 괜찮아.",
+                    "나도 가끔 내가 이상한 것 같거든."
+                ],
+                choices: [
+                    { text: "둘 다 진짜 은재씨인 것 같아요. 다면적인 거죠", affection: +8 },
+                    { text: "밤의 모습이 더 솔직한 것 같아요. 매력적이에요", affection: +7 },
+                    { text: "이상하지 않아요. 사람은 다 여러 면이 있는 거잖아요", affection: +6 }
+                ],
+                reactions: [
+                    [
+                        "다면적이라...",
+                        "그렇게 말해줘서 고마워.",
+                        "가끔 내가 이중인격 같다고 생각했는데,",
+                        "네 말 들으니 그냥 사람답다는 생각이 들어."
+                    ],
+                    [
+                        "솔직하다고...",
+                        "맞아, 지금이 더 솔직한 나야.",
+                        "너한테는 굳이 연기할 필요 없을 것 같아서.",
+                        "편해, 너랑 있으면."
+                    ],
+                    [
+                        "고마워...",
+                        "그런 말 해주는 사람 별로 없었거든.",
+                        "대부분은 일관성 있어야 한다고 하던데.",
+                        "너는 다르네."
+                    ]
+                ]
+            },
+            {
+                id: 11,
+                title: "시험 후 만남",
+                timeOfDay: 'day',
+                showImageTiming: 'narration',
+                narration: [
+                    "중간고사가 끝난 후, 학생회관 앞에서 은재와 만났다.",
+                    "그녀는 시험이 끝나서 그런지 한결 밝아 보였다.",
+                    "손에는 아이스크림을 들고 있었고, 표정도 한결 여유로워 보였다."
+                ],
+                dialogues: [
+                    "플레이어씨! 시험 끝나셨어요?",
+                    "저는 방금 마지막 과목 끝냈어요!",
+                    "정말 힘들었어요!",
+                    "그래도 끝나니까 세상이 다르게 보이네요!",
+                    "시험 어떠셨어요? 잘 보신 것 같아요?",
+                    "저는... 글쎄요, 최선은 다했는데!",
+                    "이제 결과만 기다리면 되겠죠!",
+                    "아, 맞다! 시험 끝난 기념으로 뭔가 하고 싶어요!",
+                    "영화라도 보러 갈까요?"
+                ],
+                choices: [
+                    { text: "좋아요! 어떤 영화 보고 싶으세요?", affection: +7 },
+                    { text: "시험 수고하셨어요. 맛있는 것부터 먹어요", affection: +6 },
+                    { text: "은재씨가 원하는 건 뭐든 좋아요", affection: +8 }
+                ],
+                reactions: [
+                    [
+                        "음... 로맨스 영화 어때요?",
+                        "시험 끝나서 그런지 달달한 거 보고 싶어요!",
+                        "아니면 코미디도 좋고!",
+                        "웃으면서 스트레스 풀고 싶어요!",
+                        "플레이어씨 취향은 어떠세요?"
+                    ],
+                    [
+                        "맞아요! 배고파요!",
+                        "시험 때문에 제대로 못 먹었거든요!",
+                        "떡볶이 먹고 싶어요!",
+                        "아니면 치킨도 좋고!",
+                        "같이 먹으면 더 맛있을 것 같아요!"
+                    ],
+                    [
+                        "어머! 그렇게 말씀하시면...",
+                        "뭘 해야 할지 모르겠어요!",
+                        "선택권 주시니까 더 고민되네요!",
+                        "그럼... 영화 보고 맛있는 것도 먹어요!",
+                        "둘 다 해요!"
+                    ]
+                ]
+            },
+            {
+                id: 12,
+                title: "영화관 데이트",
+                timeOfDay: 'day',
+                showImageTiming: 'dialogue',
+                showImageIndex: 6,
+                narration: [
+                    "멀티플렉스 영화관에서 은재와 함께 로맨틱 코미디 영화를 보게 되었다.",
+                    "그녀는 팝콘을 먹으면서 재미있는 장면에서는 웃고, 감동적인 장면에서는 조용히 감정이입하는 모습이었다.",
+                    "가끔 내 쪽을 힐끗 보며 미소 짓는 모습이 예뻤다."
+                ],
+                dialogues: [
+                    "영화 정말 재밌어요!",
+                    "남주인공이 너무 로맨틱해요!",
+                    "저런 남자친구 있으면 좋겠어요!",
+                    "플레이어씨는 어떠세요?",
+                    "저런 스타일 어떠세요?",
+                    "아, 혹시 여자친구 있으세요?",
+                    "갑자기 궁금해져서...",
+                    "없으시면 다행이고... 아니, 그게 아니라!",
+                    "어머, 제가 왜 이런 말을..."
+                ],
+                choices: [
+                    { text: "영화보다 옆에 있는 분이 더 예뻐요", affection: +9 },
+                    { text: "여자친구 없어요. 은재씨는 남자친구 있나요?", affection: +7 },
+                    { text: "영화 집중하고 싶으니까 조용히 해주세요", affection: -5 }
+                ],
+                reactions: [
+                    [
+                        "어머! 정말 그런 말씀을...",
+                        "영화관에서 그런 말씀하시면 어떡해요!",
+                        "주변 사람들이 다 들었을 텐데!",
+                        "정말... 부끄러워요!",
+                        "하지만... 기분은 좋아요."
+                    ],
+                    [
+                        "저도... 없어요.",
+                        "대학 와서 공부하느라 바빠서...",
+                        "그리고 마음에 드는 사람도 없었고요.",
+                        "근데 요즘에는... 음...",
+                        "아무것도 아니에요!"
+                    ],
+                    [
+                        "조용히 하라고요?",
+                        "저... 저는 그냥 재밌어서 말한 건데...",
+                        "죄송해요...",
+                        "앞으로 말 안 할게요...",
+                        "기분 나빠요..."
+                    ]
+                ]
+            },
+            {
+                id: 13,
+                title: "늦은 밤 산책",
+                timeOfDay: 'night',
+                showImageTiming: 'narration',
+                narration: [
+                    "영화를 보고 나서도 시간이 남아서, 은재가 산책을 제안했다.",
+                    "캠퍼스 뒷길을 걸으며 이야기를 나누고 있었다.",
+                    "밤 공기는 차가웠지만, 함께 걷는 것만으로도 따뜻한 기분이었다."
+                ],
+                dialogues: [
+                    "영화 재밌었어.",
+                    "근데 현실은 저렇지 않지.",
+                    "너무 완벽한 남자는 오히려 부담스러워.",
+                    "진짜는 좀 더... 사람답고 불완전해야 매력적이야.",
+                    "너는 어떤 여자 좋아해?",
+                    "밝고 활발한? 아니면 조용하고 차분한?",
+                    "나는... 둘 다인데.",
+                    "이상하지?"
+                ],
+                choices: [
+                    { text: "저는 은재씨 같은 사람이 좋아요", affection: +9 },
+                    { text: "이상하지 않아요. 다양한 매력이 있는 거죠", affection: +7 },
+                    { text: "솔직하고 진실한 사람이 좋아요", affection: +6 }
+                ],
+                reactions: [
+                    [
+                        "나 같은 사람?",
+                        "그게 무슨 뜻이야?",
+                        "낮의 나? 아니면 밤의 나?",
+                        "아니면... 둘 다?"
+                    ],
+                    [
+                        "다양한 매력이라...",
+                        "그렇게 생각해줘서 고마워.",
+                        "대부분은 일관성이 없다고 하던데.",
+                        "너는 이해해주네."
+                    ],
+                    [
+                        "솔직하고 진실한...",
+                        "그럼 지금의 나는 어때?",
+                        "낮보다는 더 솔직한 것 같은데.",
+                        "이런 나도 좋아?"
+                    ]
+                ]
+            },
+            {
+                id: 14,
+                title: "갈등",
+                timeOfDay: 'day',
+                showImageTiming: 'dialogue',
+                showImageIndex: 2,
+                narration: [
+                    "며칠 후, 학생회관에서 은재를 만났는데 표정이 좋지 않았다.",
+                    "친구들과 무슨 일이 있었는지 혼자 앉아있었다.",
+                    "평소의 밝은 모습과는 다른 모습이어서 걱정이 되었다."
+                ],
+                dialogues: [
+                    "플레이어씨...",
+                    "혹시 시간 있으세요?",
+                    "친구들이랑 좀 싸웠어요...",
+                    "제가 너무 이기적이라고 하더라고요.",
+                    "밤에 자주 나간다고, 이상하다고...",
+                    "저... 정말 이상한 건가요?",
+                    "낮에는 밝게 웃고, 밤에는 다른 사람 같다고...",
+                    "친구들이 제 진짜 모습을 모른다고 하는데...",
+                    "어떻게 해야 할지 모르겠어요."
+                ],
+                choices: [
+                    { text: "은재씨는 이상하지 않아요. 친구들이 이해 못 하는 거예요", affection: +8 },
+                    { text: "저는 은재씨의 모든 면을 좋아해요", affection: +9 },
+                    { text: "친구들 말도 일리 있어요. 좀 더 일관성 있게 행동하세요", affection: -6 }
+                ],
+                reactions: [
+                    [
+                        "정말 그렇게 생각해요?",
+                        "가끔 제가 이상한 사람 같아서...",
+                        "친구들 말 들으니까 더 그런 생각이 들어요.",
+                        "플레이어씨가 그렇게 말해주니까 위로가 돼요.",
+                        "고마워요."
+                    ],
+                    [
+                        "모든 면을... 좋아한다고요?",
+                        "낮의 저도, 밤의 저도?",
+                        "정말 그렇게 생각해요?",
+                        "그런 말 해주는 사람 처음이에요...",
+                        "플레이어씨..."
+                    ],
+                    [
+                        "친구들 말이 맞다고요?",
+                        "저도... 그렇게 생각하세요?",
+                        "일관성 있게 하라고요?",
+                        "그럼 제 진짜 모습은 어떻게 해요?",
+                        "실망이에요... 정말 실망이에요.",
+                        "혼자 있고 싶어요."
+                    ]
+                ]
+            },
+            {
+                id: 15,
+                title: "화해와 이해",
+                timeOfDay: 'night',
+                showImageTiming: 'reaction',
+                showImageIndex: 0,
+                narration: [
+                    "며칠 후 밤늦게 은재에게서 전화가 왔다.",
+                    "목소리가 한결 밝아진 것 같았다.",
+                    "친구들과의 문제가 해결된 것 같았다."
+                ],
+                dialogues: [
+                    "플레이어!",
+                    "친구들이랑 화해했어.",
+                    "솔직하게 다 얘기했거든.",
+                    "내가 밤에 다른 모습이 된다는 것도...",
+                    "처음엔 놀랐지만, 이해해주더라.",
+                    "다들 나름대로 비밀이 있다면서.",
+                    "너 말대로, 이상한 게 아니라 그냥 나인 거래.",
+                    "고마워. 용기 줘서."
+                ],
+                choices: [
+                    { text: "다행이에요. 진짜 친구들이네요", affection: +6 },
+                    { text: "은재씨가 용감했던 거예요", affection: +7 },
+                    { text: "이제 더 편해지겠어요", affection: +5 }
+                ],
+                reactions: [
+                    [
+                        "그러게. 진짜 친구였어.",
+                        "나도 그들을 믿었어야 했는데.",
+                        "괜히 혼자 고민했네.",
+                        "앞으로는 더 솔직하게 지낼 거야."
+                    ],
+                    [
+                        "용감했다고?",
+                        "아니야, 네가 용기 줘서 가능했어.",
+                        "혼자였으면 못 했을 거야.",
+                        "고마워, 정말."
+                    ],
+                    [
+                        "응, 훨씬 편해져.",
+                        "더 이상 숨기지 않아도 되니까.",
+                        "너한테도 고마워.",
+                        "계속 이해해줘서."
+                    ]
+                ]
+            },
+            {
+                id: 16,
+                title: "특별한 하루",
+                timeOfDay: 'day',
+                showImageTiming: 'dialogue',
+                showImageIndex: 4,
+                narration: [
+                    "은재가 특별한 곳에 가자고 제안했다.",
+                    "시내에 있는 작은 미술관이었다.",
+                    "그녀는 평소에 미술을 좋아한다고 했는데, 오늘은 특별한 전시가 있다고 했다."
+                ],
+                dialogues: [
+                    "여기 정말 좋죠?",
+                    "저 여기 자주 와요!",
+                    "그림 보면서 생각 정리하는 게 좋거든요!",
+                    "플레이어씨는 미술 좋아하세요?",
+                    "저기 저 그림 봐주세요!",
+                    "색깔이 정말 예쁘죠?",
+                    "낮과 밤이 만나는 순간 같아요!",
+                    "마치 저 같은...",
+                    "오늘 같이 와줘서 정말 고마워요!"
+                ],
+                choices: [
+                    { text: "은재씨가 설명해주니까 더 아름다워 보여요", affection: +8 },
+                    { text: "낮과 밤이 만나는 순간... 정말 은재씨 같네요", affection: +9 },
+                    { text: "저도 좋아요. 같이 와서 더 의미 있어요", affection: +7 }
+                ],
+                reactions: [
+                    [
+                        "정말요? 제가 설명을 잘했나요?",
+                        "사실 미술은 잘 모르는데...",
+                        "그냥 느낌으로 보는 거거든요!",
+                        "플레이어씨가 들어주셔서 더 자신감이 생겨요!",
+                        "다른 그림도 같이 봐요!"
+                    ],
+                    [
+                        "저 같다고요?",
+                        "어떤 의미에서요?",
+                        "낮과 밤이 만나는...",
+                        "그런 표현 정말 좋네요!",
+                        "제가 그런 느낌인가요?"
+                    ],
+                    [
+                        "저도요!",
+                        "혼자 오는 것보다 훨씬 좋아요!",
+                        "누군가와 같이 보면서 이야기하는 게 이렇게 재밌는 줄 몰랐어요!",
+                        "앞으로도 종종 같이 와요!",
+                        "약속!"
+                    ]
+                ]
+            },
+            {
+                id: 17,
+                title: "진심어린 대화",
+                timeOfDay: 'night',
+                showImageTiming: 'narration',
+                narration: [
+                    "미술관을 나온 후, 근처 조용한 카페에서 은재와 이야기를 나누고 있었다.",
+                    "밤이 되어 그녀의 분위기도 차분해졌다.",
+                    "창밖의 야경을 바라보며 진지한 대화를 나누고 있었다."
+                ],
+                dialogues: [
+                    "오늘 정말 좋았어.",
+                    "너랑 같이 있으니까 새로운 걸 많이 느꼈어.",
+                    "그림도 다르게 보이고...",
+                    "나 자신도 다르게 보이고.",
+                    "너는... 어때?",
+                    "나랑 있으면서 어떤 기분이야?",
+                    "솔직하게 말해줘.",
+                    "좋든 싫든."
+                ],
+                choices: [
+                    { text: "편안해요. 자연스럽고 좋아요", affection: +7 },
+                    { text: "특별해요. 은재씨와 있으면 다른 세상 같아요", affection: +9 },
+                    { text: "행복해요. 이런 기분 처음이에요", affection: +8 }
+                ],
+                reactions: [
+                    [
+                        "편안하다고...",
+                        "좋은 말이네.",
+                        "나도 너랑 있으면 편해.",
+                        "가식 없이 있을 수 있어서."
+                    ],
+                    [
+                        "다른 세상이라...",
+                        "과장 좀 심한 거 아니야?",
+                        "그래도... 기분 좋네.",
+                        "나도 너랑 있으면 평상시와 달라져."
+                    ],
+                    [
+                        "행복하다고?",
+                        "나도... 그래.",
+                        "이런 기분 오랜만이야.",
+                        "고마워, 솔직하게 말해줘서."
+                    ]
+                ]
+            },
+            {
+                id: 18,
+                title: "마음의 고백",
+                timeOfDay: 'day',
+                showImageTiming: 'dialogue',
+                showImageIndex: 5,
+                narration: [
+                    "며칠 후, 은재가 먼저 만나자고 연락했다.",
+                    "평소보다 조금 긴장한 것 같은 목소리였다.",
+                    "캠퍼스 벚꽃길에서 만나기로 했는데, 봄꽃이 흩날리는 아름다운 날이었다."
+                ],
+                dialogues: [
+                    "플레이어씨...",
+                    "오늘 날씨 정말 좋네요!",
+                    "벚꽃이 이렇게 예쁜 줄 몰랐어요!",
+                    "음... 그런데...",
+                    "제가 할 말이 있어서 불렀어요...",
+                    "좀 중요한 얘기인데...",
+                    "들어주실 수 있나요?",
+                    "저... 플레이어씨를...",
+                    "정말 좋아해요!"
+                ],
+                choices: [
+                    { text: "저도 은재씨를 좋아해요!", affection: +10 },
+                    { text: "정말요? 어떤 의미로요?", affection: +5 },
+                    { text: "용기 내줘서 고마워요. 저도 같은 마음이에요", affection: +10 }
+                ],
+                reactions: [
+                    [
+                        "정말요?!",
+                        "진짜 정말요?!",
+                        "어머, 어떡하죠!",
+                        "너무 기뻐서 뭐라고 해야 할지...",
+                        "정말 꿈같아요!",
+                        "플레이어씨도 저를..."
+                    ],
+                    [
+                        "어떤 의미냐고요?",
+                        "그냥... 좋아한다는 거예요!",
+                        "이성으로서... 좋아해요!",
+                        "부끄럽지만... 정말이에요!",
+                        "답변해주세요..."
+                    ],
+                    [
+                        "같은 마음이라고요?",
+                        "정말요?",
+                        "저 용기 내기까지 얼마나 고민했는지 몰라요!",
+                        "거절당하면 어떡하나 싶어서...",
+                        "다행이에요, 정말 다행이에요!"
+                    ]
+                ]
+            },
+            {
+                id: 19,
+                title: "새로운 시작",
+                timeOfDay: 'night',
+                narration: [
+                    "고백 이후 며칠이 지났다.",
+                    "은재와의 관계가 새로운 단계로 접어들었다.",
+                    "오늘은 연인이 된 후 첫 번째 밤 데이트였다.",
+                    "한강공원에서 야경을 보며 산책하고 있었다."
+                ],
+                dialogues: [
+                    "이렇게 연인이 되니까 기분이 이상해.",
+                    "좋기도 하고... 어색하기도 하고.",
+                    "너는 어때?",
+                    "나랑 사귀게 되어서 후회 안 해?",
+                    "나 좀 복잡한 사람이거든.",
+                    "낮에는 밝고, 밤에는 차분하고...",
+                    "감당할 수 있을까?"
+                ],
+                choices: [
+                    { text: "그런 은재씨라서 더 좋아요", affection: +9 },
+                    { text: "함께 알아가면 돼요. 시간은 많아요", affection: +8 },
+                    { text: "복잡해도 좋아요. 그게 진짜 은재씨니까", affection: +10 }
+                ],
+                reactions: [
+                    [
+                        "그런 나라서 더 좋다고?",
+                        "정말 그렇게 생각해?",
+                        "고마워...",
+                        "그런 말 해주는 사람 너뿐이야."
+                    ],
+                    [
+                        "시간이 많다...",
+                        "그래, 천천히 하자.",
+                        "급할 것 없지.",
+                        "너와 함께라면."
+                    ],
+                    [
+                        "진짜 나라서...",
+                        "그런 말 들으니까 눈물 날 것 같아.",
+                        "고마워, 정말.",
+                        "나도 너 많이 좋아해."
+                    ]
+                ]
+            }
+        ];
+
+        // Ending Conditions and Content
+        function getEnding(dayAff, nightAff) {
+            if (dayAff >= 85 && nightAff >= 85) {
+                return {
+                    type: 'true',
+                    title: '트루 엔딩 - 완전한 사랑',
+                    content: [
+                        "1년 후...",
+                        "은재와 함께한 시간들이 꿈만 같았다.",
+                        "낮의 밝고 사랑스러운 그녀도, 밤의 솔직하고 깊이 있는 그녀도 모두 사랑하게 되었다.",
+                        "그녀 역시 내 앞에서는 더 이상 연기하지 않았다.",
+                        "진짜 자신의 모습을 보여주었고, 나는 그 모든 면을 받아들였다.",
+                        "고마워, 내 모든 모습을 사랑해줘서.",
+                        "이제 낮이든 밤이든, 항상 진짜 나로 있을 수 있어.",
+                        "우리는 서로의 모든 면을 이해하고 사랑하는 완전한 연인이 되었다.",
+                        "앞으로도 함께 걸어갈 우리의 미래가 기대된다."
+                    ]
+                };
+            } else if (dayAff >= 80 && nightAff <= 50) {
+                return {
+                    type: 'day',
+                    title: '데이 엔딩 - 밝은 사랑',
+                    content: [
+                        "졸업식 날...",
+                        "은재는 평소처럼 밝게 웃으며 내 옆에 서 있었다.",
+                        "우리는 서로를 아끼는 연인이 되었지만, 그녀의 밤 모습은 여전히 신비로웠다.",
+                        "가끔 그녀가 다른 생각을 하는 것 같을 때가 있지만, 묻지 않기로 했다.",
+                        "플레이어씨와 함께 있으면 정말 행복해요!",
+                        "앞으로도 지금처럼 밝고 즐겁게 지내요!",
+                        "밝고 따뜻한 사랑을 나누는 우리.",
+                        "때로는 알 수 없는 부분이 있어도, 서로를 소중히 여기는 관계였다."
+                    ]
+                };
+            } else if (nightAff >= 80 && dayAff <= 50) {
+                return {
+                    type: 'night',
+                    title: '나이트 엔딩 - 깊은 이해',
+                    content: [
+                        "어느 늦은 밤...",
+                        "은재와 함께 조용한 카페에 앉아 있었다.",
+                        "그녀의 진짜 모습, 솔직하고 때로는 차가운 모습을 더 사랑하게 되었다.",
+                        "낮의 밝은 모습은 다른 사람들을 위한 것이라는 걸 알고 있었다.",
+                        "너만이 진짜 나를 이해해줘.",
+                        "낮의 나는 그냥... 역할일 뿐이야.",
+                        "깊이 있고 진솔한 관계를 원했던 우리.",
+                        "서로의 내면을 깊이 이해하는 특별한 사랑이었다."
+                    ]
+                };
+            } else if (dayAff >= 60 && nightAff >= 60) {
+                return {
+                    type: 'balance',
+                    title: '밸런스 엔딩 - 조화로운 사랑',
+                    content: [
+                        "봄이 다시 왔다...",
+                        "은재와 나는 서로를 이해해가며 관계를 발전시켜나갔다.",
+                        "그녀의 두 가지 모습 모두 조금씩 알아가고 있었다.",
+                        "완벽하지는 않지만, 서로를 배려하며 함께 성장하고 있었다.",
+                        "우리 잘해나가고 있는 것 같아요.",
+                        "조금씩 서로를 알아가는 게 좋아요.",
+                        "급하지 않게, 차근차근 서로를 알아가는 우리.",
+                        "조화롭고 안정적인 관계를 만들어가고 있었다."
+                    ]
+                };
+            } else if (dayAff >= 40 && nightAff >= 40) {
+                return {
+                    type: 'friend',
+                    title: '프렌드 엔딩 - 소중한 친구',
+                    content: [
+                        "2학년이 끝나갈 무렵...",
+                        "은재와 나는 좋은 친구로 남기로 했다.",
+                        "연인보다는 서로를 이해하는 친구가 더 어울린다는 결론에 도달했다.",
+                        "때로는 사랑보다 우정이 더 오래가는 법이니까.",
+                        "플레이어씨는 정말 좋은 친구예요.",
+                        "앞으로도 계속 친구로 지내요!",
+                        "연인은 되지 못했지만, 평생 갈 우정을 얻었다.",
+                        "서로의 비밀을 아는 특별한 친구 관계였다."
+                    ]
+                };
+            } else {
+                return {
+                    type: 'bad',
+                    title: '배드 엔딩 - 아쉬운 결별',
+                    content: [
+                        "학기가 끝나갈 무렵...",
+                        "은재와 나는 자연스럽게 멀어졌다.",
+                        "서로를 완전히 이해하지 못한 채로 시간이 흘렀다.",
+                        "그녀의 복잡한 성격을 받아들이기 어려웠고, 그녀도 마찬가지였던 것 같다.",
+                        "미안해요... 생각보다 어려웠어요.",
+                        "서로 다른 길을 가는 게 좋을 것 같아요.",
+                        "아쉬움만 남긴 채 우리는 각자의 길을 갔다.",
+                        "때로는 인연이 아닌 것도 있는 법이다."
+                    ]
+                };
+            }
+        }
+
+        // Helper Functions
+        function getCurrentEpisode() {
+            return episodes[gameState.currentEpisode];
+        }
+
+        function getCurrentReaction() {
+            const episode = getCurrentEpisode();
+            return episode.reactions[gameState.selectedChoice] || [];
+        }
+
+        function getAffectionLevel(affection) {
+            if (affection >= 90) return "깊은 사랑";
+            if (affection >= 75) return "연인";
+            if (affection >= 60) return "호감";
+            if (affection >= 40) return "친구";
+            if (affection >= 20) return "어색";
+            return "낯선 사이";
+        }
+
+        function updateUI() {
+            // Hide all main screens initially
+            mainScreen.style.display = 'none';
+            nameInputScreen.style.display = 'none';
+            gameScreen.style.display = 'none';
+            endingScreen.style.display = 'none';
+            specialImageScreen.style.display = 'none';
+
+            if (gameState.showMainScreen) {
+                mainScreen.style.display = 'flex';
+            } else if (gameState.showNameInput) {
+                nameInputScreen.style.display = 'flex';
+            } else if (gameState.gameCompleted) {
+                endingScreen.style.display = 'block';
+                renderEndingScreen();
+            } else if (gameState.showSpecialImage) {
+                specialImageScreen.style.display = 'flex';
+                specialImageDisplay.src = gameState.specialImageUrl;
+            } else if (gameState.gameStarted) {
+                gameScreen.style.display = 'flex';
+                renderGameScreen();
+            }
+        }
+
+        function renderGameScreen() {
+            const currentEpisode = getCurrentEpisode();
+
+            // Update background and character
+            gameBackground.style.backgroundImage = `url(${currentEpisode.timeOfDay === 'day' ? dayBgUrl : nightBgUrl})`;
+            gameCharacter.src = currentEpisode.timeOfDay === 'day' ? dayCharacterUrl : nightCharacterUrl;
+
+            // Update affection gauges
+            dayAffectionText.textContent = `${gameState.dayAffection}/100`;
+            dayAffectionBar.style.width = `${gameState.dayAffection}%`;
+            dayAffectionLevel.textContent = getAffectionLevel(gameState.dayAffection);
+            nightAffectionText.textContent = `${gameState.nightAffection}/100`;
+            nightAffectionBar.style.width = `${gameState.nightAffection}%`;
+            nightAffectionLevel.textContent = getAffectionLevel(gameState.nightAffection);
+
+            // Hide all dialogue/narration/choices content first
+            narrationContent.style.display = 'none';
+            dialogueContent.style.display = 'none';
+            choicesContent.style.display = 'none';
+            dialogueBox.style.cursor = 'pointer'; // Make dialogue box clickable by default
+
+            if (gameState.currentStep === 'narration') {
+                narrationContent.style.display = 'block';
+                narrationText.textContent = currentEpisode.narration[gameState.currentDialogueIndex];
+            } else if (gameState.currentStep === 'dialogue') {
+                dialogueContent.style.display = 'block';
+                girlNameDisplay.textContent = gameState.girlName;
+                girlNameDisplay.className = `text-sm font-bold mb-2 flex items-center space-x-2 ${
+                    currentEpisode.timeOfDay === 'day' ? 'text-pink-600' : 'text-purple-600'
+                }`;
+                dialogueText.textContent = `"${currentEpisode.dialogues[gameState.currentDialogueIndex].replace(/플레이어/g, gameState.playerName)}"`;
+                dialogueText.className = `text-sm leading-relaxed animate-fade-in-text ${
+                    currentEpisode.timeOfDay === 'day' ? 'text-pink-700' : 'text-purple-700'
+                }`;
+            } else if (gameState.currentStep === 'choices') {
+                choicesContent.style.display = 'block';
+                dialogueBox.style.cursor = 'default'; // Disable clicking through choices
+                renderChoices();
+            } else if (gameState.currentStep === 'reaction') {
+                dialogueContent.style.display = 'block';
+                girlNameDisplay.textContent = gameState.girlName;
+                girlNameDisplay.className = `text-sm font-bold mb-2 flex items-center space-x-2 ${
+                    currentEpisode.timeOfDay === 'day' ? 'text-pink-600' : 'text-purple-600'
+                }`;
+                const currentReaction = getCurrentReaction();
+                dialogueText.textContent = `"${currentReaction[gameState.currentDialogueIndex]?.replace(/플레이어/g, gameState.playerName)}"`;
+                 dialogueText.className = `text-sm leading-relaxed animate-fade-in-text ${
+                    currentEpisode.timeOfDay === 'day' ? 'text-pink-700' : 'text-purple-700'
+                }`;
+            }
+
+            // Affection change popup logic
+            if (gameState.showAffectionChange) {
+                affectionChangePopup.classList.remove('hidden');
+                affectionChangeAmountDisplay.textContent = `${gameState.affectionChangeAmount > 0 ? '+' : ''}${gameState.affectionChangeAmount}`;
+                affectionChangePopup.className = `absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30
+                    bg-white/70 backdrop-blur-md rounded-full px-6 py-3 shadow-xl flex items-center space-x-2
+                    animate-fade-in-up border-2 ${gameState.affectionChangeAmount > 0 ? 'text-green-600 border-green-400' : 'text-red-600 border-red-400'}`;
+                
+                // Update icon for affection change
+                affectionChangeIcon.innerHTML = gameState.affectionChangeType === 'day' ? 
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sun text-yellow-500"><circle cx="12" cy="12" r="8"/><line x1="12" x2="12" y1="2" y2="4"/><line x1="12" x2="12" y1="20" y2="22"/><line x1="2" x2="4" y1="12" y2="12"/><line x1="20" x2="22" y1="12" y2="12"/><line x1="4.22" x2="5.64" y1="4.22" y2="5.64"/><line x1="18.36" x2="19.78" y1="18.36" y2="19.78"/><line x1="4.22" x2="5.64" y1="19.78" y2="18.36"/><line x1="18.36" x2="19.78" y1="5.64" y2="4.22"/></svg>' :
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-moon text-purple-500"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>';
+
+                if (gameState.affectionChangeAmount > 0) {
+                    affectionSfx.currentTime = 0;
+                    affectionSfx.play().catch(e => console.error("호감도 상승 SFX 재생 실패:", e));
+                }
+                setTimeout(() => {
+                    affectionChangePopup.classList.add('hidden');
+                }, 1500);
+            } else {
+                affectionChangePopup.classList.add('hidden');
+            }
+        }
+
+        function renderChoices() {
+            const currentEpisode = getCurrentEpisode();
+            choicesContent.innerHTML = `<div class="text-sm font-bold text-gray-700 mb-2">선택해주세요:</div>`; // Clear previous choices
+            currentEpisode.choices.forEach((choice, index) => {
+                const button = document.createElement('button');
+                button.className = `w-full p-3 text-left rounded-lg border-2 transition-all duration-300 hover:scale-105 text-sm backdrop-blur-sm rounded-md ${
+                    currentEpisode.timeOfDay === 'day'
+                        ? 'border-gray-200 hover:border-pink-400 hover:bg-white/80 bg-white/70'
+                        : 'border-gray-200 hover:border-purple-400 hover:bg-white/80 bg-white/70'
+                }`;
+                button.innerHTML = `<span class="text-gray-700">${choice.text.replace(/플레이어/g, gameState.playerName)}</span>
+                                    <span class="float-right text-xs ${choice.affection > 0 ? 'text-green-500' : 'text-red-500'}">
+                                        ${choice.affection > 0 ? '+' : ''}${choice.affection}
+                                    </span>`;
+                button.onclick = (event) => handleChoice(index);
+                choicesContent.appendChild(button);
+            });
+        }
+
+        function renderEndingScreen() {
+            const ending = gameState.endingType;
+            endingScreen.style.backgroundImage = ending.type ? `url(${endingImages[ending.type]})` : 'linear-gradient(to br, #ffebee, #f8bbd0)';
+            endingTitle.textContent = ending.title;
+            endingContentText.textContent = ending.content[gameState.currentDialogueIndex];
+
+            if (gameState.currentDialogueIndex < ending.content.length - 1) {
+                endingNextButton.style.display = 'flex';
+                finalResults.style.display = 'none';
+            } else {
+                endingNextButton.style.display = 'none';
+                finalResults.style.display = 'block';
+                finalDayAffection.textContent = `${getAffectionLevel(gameState.dayAffection)} (${gameState.dayAffection}/100)`;
+                finalNightAffection.textContent = `${getAffectionLevel(gameState.nightAffection)} (${gameState.nightAffection}/100)`;
+            }
+        }
+
+        // Event Handlers
+        mainScreenClickArea.addEventListener('click', () => {
+            gameState.showMainScreen = false;
+            gameState.showNameInput = true;
+            updateUI();
+            bgm.play().catch(e => console.error("BGM 재생 실패 (메인 화면 클릭):", e));
+        });
+
+        startGameButton.addEventListener('click', () => {
+            const name = playerNameInput.value.trim();
+            if (name) {
+                gameState.playerName = name;
+                gameState.showNameInput = false;
+                gameState.gameStarted = true;
+                updateUI();
+            }
+        });
+
+        playerNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                startGameButton.click();
+            }
+        });
+
+        dialogueBox.addEventListener('click', () => {
+            if (gameState.currentStep !== 'choices') { // Prevent clicking through choices
+                nextStep();
+            }
+        });
+
+        endingNextButton.addEventListener('click', () => {
+            if (gameState.currentDialogueIndex < gameState.endingType.content.length - 1) {
+                gameState.currentDialogueIndex++;
+                renderEndingScreen();
+            }
+        });
+
+        restartGameButton.addEventListener('click', () => {
+            restartGame();
+        });
+
+        closeSpecialImageButton.addEventListener('click', () => {
+            closeSpecialImage();
+        });
+
+        continueSpecialImageButton.addEventListener('click', () => {
+            closeSpecialImage();
+        });
+
+        // Game Logic Functions
+        function handleChoice(choiceIndex) {
+            touchSfx.currentTime = 0;
+            touchSfx.play().catch(e => console.error("터치 SFX 재생 실패 (선택):", e));
+
+            const choice = getCurrentEpisode().choices[choiceIndex];
+            const currentEpisode = getCurrentEpisode();
+            
+            let newDayAffection = gameState.dayAffection;
+            let newNightAffection = gameState.nightAffection;
+            let affectionChangeType = currentEpisode.timeOfDay;
+            let affectionChangeAmount = choice.affection;
+
+            if (currentEpisode.timeOfDay === 'day') {
+                newDayAffection = Math.max(0, Math.min(100, gameState.dayAffection + choice.affection));
+            } else {
+                newNightAffection = Math.max(0, Math.min(100, gameState.nightAffection + choice.affection));
+            }
+
+            gameState.dayAffection = newDayAffection;
+            gameState.nightAffection = newNightAffection;
+            gameState.selectedChoice = choiceIndex;
+            gameState.currentStep = 'reaction';
+            gameState.currentDialogueIndex = 0;
+            gameState.showAffectionChange = true;
+            gameState.affectionChangeAmount = affectionChangeAmount;
+            gameState.affectionChangeType = affectionChangeType;
+            
+            updateUI(); // Re-render to show affection change and reaction
+        }
+
+        function nextEpisode() {
+            if (gameState.currentEpisode >= episodes.length - 1) {
+                const ending = getEnding(gameState.dayAffection, gameState.nightAffection);
+                gameState.gameCompleted = true;
+                gameState.endingType = ending;
+                gameState.currentDialogueIndex = 0;
+                bgm.pause();
+                bgm.currentTime = 0;
+                endingSfx.currentTime = 0;
+                endingSfx.play().catch(e => console.error("엔딩 SFX 재생 실패:", e));
+            } else {
+                gameState.currentEpisode++;
+                gameState.currentStep = 'narration';
+                gameState.currentDialogueIndex = 0;
+                gameState.selectedChoice = null;
+            }
+            updateUI();
+        }
+
+        function nextStep() {
+            touchSfx.currentTime = 0;
+            touchSfx.play().catch(e => console.error("터치 SFX 재생 실패 (다음 단계):", e));
+
+            if (gameState.gameCompleted) {
+                if (gameState.currentDialogueIndex < gameState.endingType.content.length - 1) {
+                    gameState.currentDialogueIndex++;
+                    renderEndingScreen();
+                }
+                return;
+            }
+
+            const currentEpisode = getCurrentEpisode();
+
+            if (gameState.showSpecialImage) {
+                closeSpecialImage();
+                return;
+            }
+
+            if (gameState.currentStep === 'narration') {
+                if (currentEpisode.showImageTiming === 'narration' && episodeImages[currentEpisode.id] !== undefined) {
+                    gameState.showSpecialImage = true;
+                    gameState.specialImageUrl = episodeImages[currentEpisode.id];
+                    updateUI();
+                    return;
+                }
+                if (gameState.currentDialogueIndex < currentEpisode.narration.length - 1) {
+                    gameState.currentDialogueIndex++;
+                } else {
+                    gameState.currentStep = 'dialogue';
+                    gameState.currentDialogueIndex = 0;
+                }
+            } else if (gameState.currentStep === 'dialogue') {
+                if (currentEpisode.showImageTiming === 'dialogue' &&
+                    gameState.currentDialogueIndex === currentEpisode.showImageIndex &&
+                    episodeImages[currentEpisode.id] !== undefined) {
+                    gameState.showSpecialImage = true;
+                    gameState.specialImageUrl = episodeImages[currentEpisode.id];
+                    updateUI();
+                    return;
+                }
+                if (gameState.currentDialogueIndex < currentEpisode.dialogues.length - 1) {
+                    gameState.currentDialogueIndex++;
+                } else {
+                    gameState.currentStep = 'choices';
+                }
+            } else if (gameState.currentStep === 'reaction') {
+                const currentReaction = getCurrentReaction();
+                if (currentEpisode.showImageTiming === 'reaction' &&
+                    gameState.currentDialogueIndex === currentEpisode.showImageIndex &&
+                    episodeImages[currentEpisode.id] !== undefined) {
+                    gameState.showSpecialImage = true;
+                    gameState.specialImageUrl = episodeImages[currentEpisode.id];
+                    updateUI();
+                    return;
+                }
+                if (gameState.currentDialogueIndex < currentReaction.length - 1) {
+                    gameState.currentDialogueIndex++;
+                } else {
+                    nextEpisode();
+                }
+            }
+            updateUI();
+        }
+
+        function closeSpecialImage() {
+            gameState.showSpecialImage = false;
+            gameState.specialImageUrl = '';
+            
+            const currentEpisode = getCurrentEpisode();
+            if (currentEpisode.showImageTiming === 'narration') {
+                if (gameState.currentDialogueIndex < currentEpisode.narration.length - 1) {
+                    gameState.currentDialogueIndex++;
+                } else {
+                    gameState.currentStep = 'dialogue';
+                    gameState.currentDialogueIndex = 0;
+                }
+            } else if (currentEpisode.showImageTiming === 'dialogue') {
+                if (gameState.currentDialogueIndex < currentEpisode.dialogues.length - 1) {
+                    gameState.currentDialogueIndex++;
+                } else {
+                    gameState.currentStep = 'choices';
+                }
+            } else if (currentEpisode.showImageTiming === 'reaction') {
+                const currentReaction = getCurrentReaction();
+                if (gameState.currentDialogueIndex < currentReaction.length - 1) {
+                    gameState.currentDialogueIndex++;
+                } else {
+                    nextEpisode();
+                }
+            }
+            updateUI();
+        }
+
+        function restartGame() {
+            bgm.pause();
+            bgm.currentTime = 0;
+            touchSfx.pause();
+            touchSfx.currentTime = 0;
+            affectionSfx.pause();
+            affectionSfx.currentTime = 0;
+            endingSfx.pause();
+            endingSfx.currentTime = 0;
+
+            gameState = {
+                currentEpisode: 0,
+                dayAffection: 0,
+                nightAffection: 0,
+                playerName: gameState.playerName, // Keep player name
+                girlName: '은재',
+                gameStarted: true,
+                showNameInput: false,
+                showMainScreen: false,
+                currentStep: 'narration',
+                currentDialogueIndex: 0,
+                selectedChoice: null,
+                gameCompleted: false,
+                endingType: null,
+                showSpecialImage: false,
+                specialImageUrl: '',
+                showAffectionChange: false,
+                affectionChangeAmount: 0,
+                affectionChangeType: 'day',
+            };
+            updateUI();
+            bgm.play().catch(e => console.error("BGM 재생 실패 (재시작):", e));
+        }
+
+        // Initial UI render
+        document.addEventListener('DOMContentLoaded', updateUI);
+
+    </script>
+</body>
+</html>
